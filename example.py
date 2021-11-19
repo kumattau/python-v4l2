@@ -25,7 +25,7 @@ import v4l2
 def main():
     DEVICE = "/dev/video0"
     BUF_TYPE = v4l2.V4L2_BUF_TYPE_VIDEO_CAPTURE
-    FMT_TYPE = v4l2.V4L2_PIX_FMT_MPEG
+    FMT_TYPE = v4l2.V4L2_PIX_FMT_MJPEG
     WIDTH = 1280
     HEIGHT = 720
     REQ_COUNT = 4
@@ -46,6 +46,14 @@ def main():
     fmt.fmt.pix.height = HEIGHT
     fmt.fmt.pix.pixelformat = FMT_TYPE
     fcntl.ioctl(fd, v4l2.VIDIOC_S_FMT, fmt)
+
+    def decode_fourcc(fourcc):
+        return "".join(fourcc.to_bytes(4, "little").decode("utf-8"))
+
+    print("Camera spec: "
+          f"width={fmt.fmt.pix.width},"
+          f"height={fmt.fmt.pix.height},"
+          f"pixelformat={decode_fourcc(fmt.fmt.pix.pixelformat)}")
 
     req = v4l2.v4l2_requestbuffers()
     req.type = BUF_TYPE
@@ -78,10 +86,11 @@ def main():
     # convert bytes to pass int *, not int
     fcntl.ioctl(fd, v4l2.VIDIOC_STREAMON, BUF_TYPE.to_bytes(8, "little"))
 
+    buf = v4l2.v4l2_buffer()
+
     while True:
         _ = selector.select()
 
-        buf = v4l2.v4l2_buffer()
         buf.type = BUF_TYPE
         buf.memory = MEM_TYPE
         fcntl.ioctl(fd, v4l2.VIDIOC_DQBUF, buf)
@@ -91,8 +100,7 @@ def main():
         fcntl.ioctl(fd, v4l2.VIDIOC_QBUF, buf)
 
         cv2.imshow(DEVICE, img)
-        key = cv2.waitKey(1)
-        if key == 99:
+        if cv2.waitKey(1) == 99:
             break
 
 
