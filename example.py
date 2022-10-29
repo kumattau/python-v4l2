@@ -36,7 +36,7 @@ def main():
     else:
         MEM_TYPE = v4l2.V4L2_MEMORY_MMAP
         mode = "MMAP"
-    print(f"{sys.argv[0]}: Start capture with {mode} mode. Press Ctrl+C to exit")
+    print(f"{sys.argv[0]}: Start capture with {mode} mode. Press ESC to exit")
 
     fd = open(DEVICE, "rb+", buffering=0)
 
@@ -100,7 +100,7 @@ def main():
         fcntl.ioctl(fd, v4l2.VIDIOC_QBUF, buf)
 
         cv2.imshow(DEVICE, img)
-        if cv2.waitKey(1) == 99:
+        if cv2.waitKey(1) == 27:
             break
 
 
